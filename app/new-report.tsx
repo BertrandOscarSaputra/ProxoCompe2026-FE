@@ -5,25 +5,23 @@ import { HelloWave } from "@/components/hello-wave";
 import ParallaxScrollView from "@/components/parallax-scroll-view";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import * as Location from "expo-location";
 import { Link } from "expo-router";
-import { useEffect } from "react";
 
-export default function HomeScreen() {
-  useEffect(() => {
-    async function getCurrentLocation() {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        // setErrorMsg("Permission to access location was denied");
-        return;
-      }
+export default function NewReportScreen() {
+  //   useEffect(() => {
+  //     async function getCurrentLocation() {
+  //       let { status } = await Location.requestForegroundPermissionsAsync();
+  //       if (status !== "granted") {
+  //         // setErrorMsg("Permission to access location was denied");
+  //         return;
+  //       }
 
-      let location = await Location.getCurrentPositionAsync({});
-      // setLocation(location);
-    }
+  //       let location = await Location.getCurrentPositionAsync({});
+  //       // setLocation(location);
+  //     }
 
-    getCurrentLocation();
-  }, []);
+  //     getCurrentLocation();
+  //   }, []);
 
   return (
     <ParallaxScrollView
