@@ -1,122 +1,400 @@
-import { Image } from "expo-image";
-import { Platform, StyleSheet } from "react-native";
-
-import { HelloWave } from "@/components/hello-wave";
-import ParallaxScrollView from "@/components/parallax-scroll-view";
+import ButtonCst from "@/components/button-cst";
+import FullscreenLoader from "@/components/fullscreen-loader";
+import HeaderCst from "@/components/header-cst";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { Link } from "expo-router";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { Colors, primaryColor } from "@/constants/theme";
+import { ReportForm, reportSchema } from "@/forms";
+import { getCurrentLocation } from "@/utils/currentLocation";
+import { analyzePollution } from "@/utils/gemini-ai";
+import { openCamera, openGallery } from "@/utils/imagePicker";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Image } from "expo-image";
+import * as Location from "expo-location";
+import { useEffect, useRef, useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  useColorScheme,
+  View,
+} from "react-native";
+import MapView, { Marker } from "react-native-maps";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 export default function NewReportScreen() {
-  //   useEffect(() => {
-  //     async function getCurrentLocation() {
-  //       let { status } = await Location.requestForegroundPermissionsAsync();
-  //       if (status !== "granted") {
-  //         // setErrorMsg("Permission to access location was denied");
-  //         return;
-  //       }
+  const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
+  const sheetRef = useRef<BottomSheet>(null);
+  const [locationName, setLocationName] = useState("");
+  const [base64, setBase64] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  //       let location = await Location.getCurrentPositionAsync({});
-  //       // setLocation(location);
-  //     }
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<ReportForm>({
+    resolver: zodResolver(reportSchema),
+    defaultValues: {
+      image: "",
+      description: "",
+      latitude: 0,
+      longitude: 0,
+    },
+  });
 
-  //     getCurrentLocation();
-  //   }, []);
+  const image = watch("image");
+  const latitude = watch("latitude");
+  const longitude = watch("longitude");
+
+  useEffect(() => {
+    async function loadLocation() {
+      try {
+        const location = await getCurrentLocation();
+
+        const lat = location.coords.latitude;
+        const lng = location.coords.longitude;
+
+        setValue("latitude", lat, { shouldValidate: true });
+        setValue("longitude", lng, { shouldValidate: true });
+
+        await updateAddress(lat, lng);
+      } catch (err) {
+        console.error("error get location", err);
+      }
+    }
+
+    loadLocation();
+  }, []);
+
+  async function updateAddress(lat: number, lng: number) {
+    const address = await Location.reverseGeocodeAsync({
+      latitude: lat,
+      longitude: lng,
+    });
+
+    setLocationName(address?.[0]?.formattedAddress || "");
+  }
+
+  const handleCamera = async () => {
+    const res = await openCamera();
+    if (res) {
+      setValue("image", res.uri, { shouldValidate: true });
+      setBase64(res.base64 || "");
+    }
+    sheetRef.current?.close();
+  };
+
+  const handleGallery = async () => {
+    const res = await openGallery();
+    if (res) {
+      setValue("image", res.uri, { shouldValidate: true });
+      setBase64(res.base64 || "");
+    }
+    sheetRef.current?.close();
+  };
+
+  const pickImage = () => {
+    sheetRef.current?.expand();
+  };
+
+  const onSubmit = handleSubmit(async (data) => {
+    console.log(data);
+    const { image, ...payload } = data;
+
+    setLoading(true);
+    await analyzePollution(JSON.stringify(payload), base64);
+
+    setLoading(false);
+  });
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
-      }
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-          to see changes. Press{" "}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: "cmd + d",
-              android: "cmd + m",
-              web: "F12",
-            })}
-          </ThemedText>{" "}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction
-              title="Action"
-              icon="cube"
-              onPress={() => alert("Action pressed")}
-            />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert("Share pressed")}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert("Delete pressed")}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <>
+      {loading && <FullscreenLoader />}
+      {/* header */}
+      <SafeAreaView edges={["top"]}>
+        <HeaderCst title="Post Report" />
+      </SafeAreaView>
+      {/* content */}
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          { backgroundColor: Colors[colorScheme ?? "light"].background },
+        ]}
+      >
+        <View>
+          <ThemedText type="title">Submit Pollution Report</ThemedText>
+          <ThemedText type="small" style={{ color: primaryColor + "70" }}>
+            Help your community stay clean and healthy.
+          </ThemedText>
+        </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
+        <View style={{ gap: 12 }}>
+          <ThemedText type="subtitle" style={styles.subtitle}>
+            Polution Photo
+          </ThemedText>
+
+          {/* PHOTO */}
+          {image ? (
+            <View style={styles.imgContainer}>
+              <Pressable
+                onPress={() => {
+                  setValue("image", "");
+                  setBase64("");
+                }}
+                style={styles.imgXBtn}
+              >
+                <IconSymbol
+                  name="x.circle.fill"
+                  size={24}
+                  color={primaryColor}
+                />
+              </Pressable>
+              <Image
+                source={{ uri: image }}
+                contentFit="contain"
+                style={{ width: "100%", flex: 1 }}
+              />
+            </View>
+          ) : (
+            <Pressable onPress={pickImage} style={styles.imgContainer}>
+              <Image
+                source={require("@/assets/images/upload-img-placeholder.png")}
+                contentFit="contain"
+                style={{ width: "100%", flex: 1 }}
+              />
+              <View style={styles.imgPlaceholder}>
+                <IconSymbol
+                  name="photo.badge.plus"
+                  size={40}
+                  color={primaryColor}
+                />
+                <ThemedText style={{ color: primaryColor }}>
+                  Tap to take photo
+                </ThemedText>
+              </View>
+            </Pressable>
+          )}
+          {errors.image && (
+            <ThemedText style={{ color: "red" }}>
+              {errors.image.message}
+            </ThemedText>
+          )}
+        </View>
+
+        {/* DESCRIPTION */}
+        <View style={{ gap: 12 }}>
+          <ThemedText type="subtitle" style={styles.subtitle}>
+            Description
+          </ThemedText>
+          <Controller
+            control={control}
+            name="description"
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                multiline
+                numberOfLines={5}
+                placeholder="Describe the pollution problem... e.g., Oil spill in the creek, illegal dumping on the sidewalk."
+                value={value}
+                onChangeText={onChange}
+                style={[
+                  styles.textarea,
+                  {
+                    color: Colors[colorScheme ?? "light"].text,
+                    // backgroundColor: Colors[colorScheme ?? "light"].background,
+                    backgroundColor: "white",
+                  },
+                ]}
+              />
+            )}
+          />
+
+          {errors.description && (
+            <ThemedText style={{ color: "red" }}>
+              {errors.description.message}
+            </ThemedText>
+          )}
+        </View>
+
+        {/* LOCATION */}
+        <View style={{ gap: 12 }}>
+          <ThemedText type="subtitle" style={styles.subtitle}>
+            Location
+          </ThemedText>
+          <View style={styles.locationContainer}>
+            <View style={styles.circle}>
+              <IconSymbol name="location" size={22} color={primaryColor} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <ThemedText
+                style={{ flex: 1, flexWrap: "wrap" }}
+                numberOfLines={2}
+              >
+                {`📍 ${locationName}` || "Location unavailable"}
+              </ThemedText>
+            </View>
+            <ButtonCst label="Change" onPress={() => null} />
+          </View>
+
+          {(errors.latitude || errors.longitude) && (
+            <ThemedText style={{ color: "red" }}>
+              Location is required
+            </ThemedText>
+          )}
+        </View>
+
+        {/* MAP */}
+        <View style={styles.mapContainer}>
+          {latitude != 0 && longitude != 0 && (
+            <MapView
+              style={{ flex: 1 }}
+              initialRegion={{
+                latitude,
+                longitude,
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              }}
+            >
+              <Marker
+                coordinate={{
+                  latitude: latitude,
+                  longitude: longitude,
+                }}
+              />
+            </MapView>
+          )}
+        </View>
+      </ScrollView>
+
+      {/* Footer */}
+      <ThemedView style={[styles.footer, { paddingBottom: insets.bottom }]}>
+        <ButtonCst onPress={onSubmit} style={styles.submitBtn}>
+          <IconSymbol name="sparkles" size={22} color="white" />
+          <ThemedText style={styles.submitBtnText}>Analyze Report</ThemedText>
+        </ButtonCst>
       </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">
-            npm run reset-project
-          </ThemedText>{" "}
-          to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
-          directory. This will move the current{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+
+      <BottomSheet
+        ref={sheetRef}
+        index={-1} // -1 is closed, 0 is open
+        enablePanDownToClose
+        // backdropComponent={renderBackdrop}
+      >
+        <BottomSheetView
+          style={[styles.sheetContainer, { paddingBottom: insets.bottom }]}
+        >
+          <TouchableOpacity style={styles.option} onPress={handleCamera}>
+            <IconSymbol
+              name="camera"
+              size={22}
+              color={Colors[colorScheme ?? "light"].text}
+            />
+            <ThemedText>Take Photo</ThemedText>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.option} onPress={handleGallery}>
+            <IconSymbol
+              name="photo"
+              size={22}
+              color={Colors[colorScheme ?? "light"].text}
+            />
+            <ThemedText>Choose from Gallery</ThemedText>
+          </TouchableOpacity>
+        </BottomSheetView>
+      </BottomSheet>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    padding: 16,
+    paddingVertical: 8,
+    gap: 24,
+  },
+  subtitle: {
+    fontWeight: "semibold",
+  },
+  imgContainer: {
+    borderRadius: 24,
+    overflow: "hidden",
+    backgroundColor: "gray",
+    aspectRatio: 16 / 9,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imgPlaceholder: {
+    position: "absolute",
+    alignItems: "center",
+    gap: 4,
+  },
+  imgXBtn: {
+    zIndex: 1,
+    position: "absolute",
+    top: 10,
+    right: 10,
+  },
+  textarea: {
+    borderRadius: 24,
+    padding: 16,
+    minHeight: 120,
+    textAlignVertical: "top",
+  },
+  locationContainer: {
+    borderRadius: 24,
+    padding: 16,
+    backgroundColor: "white",
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 12,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  mapContainer: {
+    aspectRatio: 16 / 9,
+    width: "100%",
+    overflow: "hidden",
+    borderRadius: 24,
+    backgroundColor: "#E2E8F0",
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
+  circle: {
+    borderRadius: "50%",
+    backgroundColor: "#14341610",
+    padding: 10,
+    aspectRatio: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  sheetContainer: {
+    padding: 16,
+  },
+  option: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 8,
+  },
+  footer: {
+    padding: 24,
+    paddingVertical: 8,
+  },
+  submitBtn: {
+    backgroundColor: primaryColor,
+    paddingVertical: 16,
+    justifyContent: "center",
+  },
+  submitBtnText: {
+    color: "white",
+    fontSize: 18,
+    textAlign: "center",
   },
 });

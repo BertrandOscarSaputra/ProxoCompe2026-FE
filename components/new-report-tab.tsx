@@ -1,15 +1,17 @@
 import { primaryColor } from "@/constants/theme";
-import { useRouter } from "expo-router";
+import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, TouchableOpacity } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconSymbol } from "./ui/icon-symbol";
 
 const NewReportTab = () => {
-  const router = useRouter();
+  const insets = useSafeAreaInsets();
+
   return (
     <TouchableOpacity
       onPress={() => router.push("/new-report")}
-      style={styles.container}
+      style={[styles.container, { bottom: insets.bottom + 12 }]}
     >
       <IconSymbol name="plus" size={32} color="white" />
     </TouchableOpacity>
@@ -20,7 +22,6 @@ const styles = StyleSheet.create({
   container: {
     position: "absolute",
     alignSelf: "center",
-    bottom: 36,
     backgroundColor: primaryColor,
     padding: 8,
     borderRadius: "50%",
