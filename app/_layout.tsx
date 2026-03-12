@@ -45,6 +45,10 @@ export default function RootLayout() {
               <Stack.Screen name="(auth)" options={{ headerShown: false }} />
               <Stack.Screen name="welcome" options={{ headerShown: false }} />
               <Stack.Screen
+                name="edit-profile"
+                options={{ headerShown: false }}
+              />
+              <Stack.Screen
                 name="(new-report)"
                 options={{ headerShown: false }}
               />

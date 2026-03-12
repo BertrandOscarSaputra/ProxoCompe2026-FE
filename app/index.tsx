@@ -9,7 +9,7 @@ const AppScreen = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      router.replace("/welcome");
+      router.replace("/(tabs)");
     }, 2000);
 
     return () => clearTimeout(timer);
