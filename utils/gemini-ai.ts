@@ -11,14 +11,14 @@ TASKS:
 
 OUTPUT RULES:
 - Strict JSON stringify format, no markdown, no extra text
-- "polutionScore": number 1-10
+- "pollutionScore": number 1-10
 - "summary": max 150 chars, follow description's language
 
 EXAMPLE:
-{"polutionScore":8.5,"isValid":true,"summary":"Heavy plastic pollution in urban river. Industrial smoke visible with poor air quality. Need proper waste management and avoid consumption of water from rivers."}
+{"pollutionScore":8.5,"isValid":true,"summary":"Heavy plastic pollution in urban river. Industrial smoke visible with poor air quality. Need proper waste management and avoid consumption of water from rivers."}
 
 EXAMPLE INVALID DATA:
-{"polutionScore":0,"isValid":false,"summary":"DATA INVALID: Image shows beach but coordinates indicate inland mountain location."}
+{"pollutionScore":0,"isValid":false,"summary":"DATA INVALID: Image shows beach but coordinates indicate inland mountain location."}
 
 PROCEED WITH ANALYSIS.
 

@@ -12,7 +12,7 @@ import {
   View,
 } from "react-native";
 
-export default function SignIn() {
+export default function SignInScreen() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");

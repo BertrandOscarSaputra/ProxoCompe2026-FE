@@ -5,8 +5,8 @@ import { ThemedText } from "@/components/themed-text";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors, primaryColor } from "@/constants/theme";
 import { ReportForm, reportSchema } from "@/forms";
-import { getCurrentLocation } from "@/utils/currentLocation";
-import { openCamera, openGallery } from "@/utils/imagePicker";
+import { getCurrentLocation } from "@/utils/current-location";
+import { openCamera, openGallery } from "@/utils/image-picker";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
@@ -47,14 +47,14 @@ export default function NewReportScreen() {
   } = useForm<ReportForm>({
     resolver: zodResolver(reportSchema),
     defaultValues: {
-      image: "",
+      photo: "",
       description: "",
       latitude: 0,
       longitude: 0,
     },
   });
 
-  const image = watch("image");
+  const photo = watch("photo");
   const latitude = watch("latitude");
   const longitude = watch("longitude");
 
@@ -90,7 +90,7 @@ export default function NewReportScreen() {
   const handleCamera = async () => {
     const res = await openCamera();
     if (res) {
-      setValue("image", res.uri, { shouldValidate: true });
+      setValue("photo", res.uri, { shouldValidate: true });
       setBase64(res.base64 || "");
     }
     sheetRef.current?.close();
@@ -99,7 +99,7 @@ export default function NewReportScreen() {
   const handleGallery = async () => {
     const res = await openGallery();
     if (res) {
-      setValue("image", res.uri, { shouldValidate: true });
+      setValue("photo", res.uri, { shouldValidate: true });
       setBase64(res.base64 || "");
     }
     sheetRef.current?.close();
@@ -110,12 +110,12 @@ export default function NewReportScreen() {
   };
 
   const onSubmit = handleSubmit(async (data) => {
-    const { image, ...payload } = data;
+    const { photo, ...payload } = data;
 
     setLoading(true);
     // const aiResponse = await analyzePollution(JSON.stringify(payload), base64);
     //Sementara pake dummy for hemat token kwokowkwo :p
-    const aiResponse = `{"polutionScore":0,"summary":"DATA INVALID: Description is gibberish and image shows no discernible pollution. Cannot perform environmental analysis."}`;
+    const aiResponse = `{"pollutionScore":0,"summary":"DATA INVALID: Description is gibberish and image shows no discernible pollution. Cannot perform environmental analysis."}`;
 
     setLoading(false);
     router.replace({
@@ -154,11 +154,11 @@ export default function NewReportScreen() {
           </ThemedText>
 
           {/* PHOTO */}
-          {image ? (
+          {photo ? (
             <View style={styles.imgContainer}>
               <Pressable
                 onPress={() => {
-                  setValue("image", "");
+                  setValue("photo", "");
                   setBase64("");
                 }}
                 style={styles.imgXBtn}
@@ -170,7 +170,7 @@ export default function NewReportScreen() {
                 />
               </Pressable>
               <Image
-                source={{ uri: image }}
+                source={{ uri: photo }}
                 contentFit="contain"
                 style={{ width: "100%", flex: 1 }}
               />
@@ -194,9 +194,9 @@ export default function NewReportScreen() {
               </View>
             </Pressable>
           )}
-          {errors.image && (
+          {errors.photo && (
             <ThemedText style={{ color: "red" }}>
-              {errors.image.message}
+              {errors.photo.message}
             </ThemedText>
           )}
         </View>

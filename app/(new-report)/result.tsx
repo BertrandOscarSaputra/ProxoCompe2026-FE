@@ -1,21 +1,29 @@
 import Badge from "@/components/badge";
 import ButtonCst from "@/components/button-cst";
+import FullscreenLoader from "@/components/fullscreen-loader";
 import HeaderCst from "@/components/header-cst";
 import { ThemedText } from "@/components/themed-text";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors, primaryColor } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme.web";
+import { useCreateReport } from "@/hooks/use-report";
 import { Image } from "expo-image";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import {
+  Alert,
+  ScrollView,
+  StyleSheet,
+  ToastAndroid,
+  View,
+} from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 
 type Params = {
-  image: string;
+  photo: string;
   description: string;
   latitude: string;
   longitude: string;
@@ -27,6 +35,36 @@ const ReportResultScreen = () => {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<Params>();
   const aiResponse = JSON.parse(params.aiResponse);
+  const { mutate, isPending, error } = useCreateReport();
+
+  const handleSubmit = (mode: "PUBLIC" | "ONLY_ME") => {
+    mutate(
+      {
+        photo: params.photo,
+        description: params.description,
+        latitude: Number(params.latitude),
+        longitude: Number(params.longitude),
+        pollution_score: aiResponse.pollutionScore,
+        ai_summary: aiResponse.summary,
+        privacy: mode,
+        user_id: "e629328d-6cd0-4597-8b85-6951989caaba",
+      },
+      {
+        onError(error) {
+          console.error(error);
+          Alert.alert("Error creating report", error.message);
+        },
+        onSuccess() {
+          ToastAndroid.showWithGravity(
+            `Report ${mode === "PUBLIC" ? "created" : "saved"}`,
+            ToastAndroid.SHORT,
+            ToastAndroid.TOP,
+          );
+          router.replace("/(tabs)");
+        },
+      },
+    );
+  };
 
   return (
     <>
@@ -44,7 +82,7 @@ const ReportResultScreen = () => {
       >
         <View style={styles.imgContainer}>
           <Image
-            source={{ uri: params.image }}
+            source={{ uri: params.photo }}
             contentFit="contain"
             style={{ width: "100%", flex: 1 }}
           />
@@ -84,7 +122,7 @@ const ReportResultScreen = () => {
       {/* Footer */}
       <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
         <ButtonCst
-          onPress={undefined}
+          onPress={() => handleSubmit("ONLY_ME")}
           style={[styles.submitBtn, { backgroundColor: primaryColor + "10" }]}
         >
           <IconSymbol
@@ -101,7 +139,7 @@ const ReportResultScreen = () => {
         </ButtonCst>
         <ButtonCst
           disabled={!aiResponse?.isValid}
-          onPress={undefined}
+          onPress={() => handleSubmit("PUBLIC")}
           style={styles.submitBtn}
         >
           <IconSymbol name="sparkles" size={22} color="white" />
@@ -110,6 +148,8 @@ const ReportResultScreen = () => {
           </ThemedText>
         </ButtonCst>
       </View>
+
+      {isPending && <FullscreenLoader />}
     </>
   );
 };

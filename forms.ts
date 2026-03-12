@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const reportSchema = z
   .object({
-    image: z.string().min(1, "Photo is required"),
+    photo: z.string().min(1, "Photo is required"),
     description: z.string().min(5, "Description too short"),
     latitude: z.number(),
     longitude: z.number(),
