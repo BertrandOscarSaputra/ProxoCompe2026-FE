@@ -12,14 +12,26 @@ import { ThemedText } from "./themed-text";
 type Props = {
   label?: string;
   children?: ReactNode;
+  disabled?: boolean;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
 };
 
-const ButtonCst = ({ label, children, onPress, style, textStyle }: Props) => {
+const ButtonCst = ({
+  label,
+  children,
+  disabled,
+  onPress,
+  style,
+  textStyle,
+}: Props) => {
   return (
-    <Pressable style={[styles.container, style]} onPress={onPress}>
+    <Pressable
+      disabled={disabled}
+      style={[styles.container, disabled && styles.containerDisabled, style]}
+      onPress={onPress}
+    >
       {children ? (
         children
       ) : (
@@ -43,6 +55,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: "#14341610",
     gap: 8,
+  },
+  containerDisabled: {
+    opacity: 0.5,
   },
 });
 

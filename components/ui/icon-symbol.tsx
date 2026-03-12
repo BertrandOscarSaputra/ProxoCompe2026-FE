@@ -32,6 +32,8 @@ const MAPPING = {
   location: "location-on",
   sparkles: "auto-awesome",
   "x.circle.fill": "cancel",
+  "exclamationmark.triangle.fill": "dangerous",
+  "filemenu.and.cursorarrow": "save",
 } as IconMapping;
 
 /**

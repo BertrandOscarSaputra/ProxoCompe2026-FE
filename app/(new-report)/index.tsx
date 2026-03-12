@@ -2,17 +2,17 @@ import ButtonCst from "@/components/button-cst";
 import FullscreenLoader from "@/components/fullscreen-loader";
 import HeaderCst from "@/components/header-cst";
 import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors, primaryColor } from "@/constants/theme";
 import { ReportForm, reportSchema } from "@/forms";
 import { getCurrentLocation } from "@/utils/currentLocation";
-import { analyzePollution } from "@/utils/gemini-ai";
 import { openCamera, openGallery } from "@/utils/imagePicker";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import * as Location from "expo-location";
+import { router } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -110,13 +110,21 @@ export default function NewReportScreen() {
   };
 
   const onSubmit = handleSubmit(async (data) => {
-    console.log(data);
     const { image, ...payload } = data;
 
     setLoading(true);
-    await analyzePollution(JSON.stringify(payload), base64);
+    // const aiResponse = await analyzePollution(JSON.stringify(payload), base64);
+    //Sementara pake dummy for hemat token kwokowkwo :p
+    const aiResponse = `{"polutionScore":0,"summary":"DATA INVALID: Description is gibberish and image shows no discernible pollution. Cannot perform environmental analysis."}`;
 
     setLoading(false);
+    router.replace({
+      pathname: "/result",
+      params: {
+        ...data,
+        aiResponse,
+      },
+    });
   });
 
   return (
@@ -278,12 +286,17 @@ export default function NewReportScreen() {
       </ScrollView>
 
       {/* Footer */}
-      <ThemedView style={[styles.footer, { paddingBottom: insets.bottom }]}>
+      <LinearGradient
+        colors={["#fff", "#F3E8D3"]}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 0, y: 0 }} //bottom to top
+        style={[styles.footer, { paddingBottom: insets.bottom }]}
+      >
         <ButtonCst onPress={onSubmit} style={styles.submitBtn}>
           <IconSymbol name="sparkles" size={22} color="white" />
           <ThemedText style={styles.submitBtnText}>Analyze Report</ThemedText>
         </ButtonCst>
-      </ThemedView>
+      </LinearGradient>
 
       <BottomSheet
         ref={sheetRef}

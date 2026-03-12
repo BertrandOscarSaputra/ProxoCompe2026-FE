@@ -9,14 +9,15 @@ import { IconSymbol } from "./ui/icon-symbol";
 
 type Props = {
   title: string;
+  onBackPress?: () => void;
 };
 
-const HeaderCst = ({ title }: Props) => {
+const HeaderCst = ({ title, onBackPress }: Props) => {
   //   const router = useRouter();
   const colorScheme = useColorScheme();
   return (
     <ThemedView style={styles.container}>
-      <Pressable onPress={() => router.back()}>
+      <Pressable onPress={() => onBackPress || router.back()}>
         <IconSymbol
           name="chevron.left"
           size={32}

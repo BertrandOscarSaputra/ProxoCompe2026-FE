@@ -10,7 +10,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. setup .env file. Just copy .env.example and set the value
+2. Setup .env file. Just copy .env.example and set the value
 
 3. Start the app
 

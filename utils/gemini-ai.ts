@@ -15,10 +15,10 @@ OUTPUT RULES:
 - "summary": max 150 chars, follow description's language
 
 EXAMPLE:
-{"polutionScore":8.5,"summary":"Heavy plastic pollution in urban river. Industrial smoke visible with poor air quality. Need proper waste management and avoid consumption of water from rivers."}
+{"polutionScore":8.5,"isValid":true,"summary":"Heavy plastic pollution in urban river. Industrial smoke visible with poor air quality. Need proper waste management and avoid consumption of water from rivers."}
 
 EXAMPLE INVALID DATA:
-{"polutionScore":0,"summary":"DATA INVALID: Image shows beach but coordinates indicate inland mountain location."}
+{"polutionScore":0,"isValid":false,"summary":"DATA INVALID: Image shows beach but coordinates indicate inland mountain location."}
 
 PROCEED WITH ANALYSIS.
 

@@ -10,7 +10,7 @@ const NewReportTab = () => {
 
   return (
     <TouchableOpacity
-      onPress={() => router.push("/new-report")}
+      onPress={() => router.push("/(new-report)")}
       style={[styles.container, { bottom: insets.bottom + 12 }]}
     >
       <IconSymbol name="plus" size={32} color="white" />
